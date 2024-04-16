@@ -5,14 +5,14 @@ import numpy as np
 
 np.set_printoptions(precision=4, floatmode="fixed")
 
-def LU_transform(A) -> Tuple[np.matrix, np.matrix]:
-
-
+def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix]:
     dim = A.shape
-    A_k = A.copy()
-    L = np.zeros(dim)
-    
     n = dim[0]
+
+    A_k = A.copy()
+    L = np.diag(np.full(n, 1))
+    P = np.identity(n)
+    
 
     for k in range(n-1):
         lead = A_k[k, k]
@@ -22,6 +22,23 @@ def LU_transform(A) -> Tuple[np.matrix, np.matrix]:
 
         for i in range(k+1, n):
             
+            row = A_k[k, k]
+            max_l = k
+
+            for l in range(k+1, n):
+                if abs(row) < abs(A_k[l, k]):
+                    row = abs(A_k[l, k])
+                    max_l = l
+            
+            if max_l != k:
+                A_k[[k, max_l]] = A_k[[max_l, k]]
+
+                L[[k, max_l]] = L[[max_l, k]]
+                L[:, [k, max_l]] = L[:, [max_l, k]]
+
+                P[[k, max_l]] = P[[max_l, k]]
+
+
 
             mu = A_k[i, k] / lead
             L[i, k] = mu
@@ -42,7 +59,7 @@ def LU_transform(A) -> Tuple[np.matrix, np.matrix]:
 
     for i in range(n):
         L[i, i] = 1.0
-    return (L, A_k)
+    return (L, A_k, P)
 
 
 def solve_LU(L: np.matrix, U: np.matrix, b: np.array) -> np.array:
@@ -77,7 +94,7 @@ def solve(inputfile):
         A = np.matrix(data["A"], dtype=np.float32)
         b = np.array(data["b"], dtype=np.float32)
     
-    L, U = LU_transform(A)
+    L, U, P = LUP_transfrom(A)
 
     print("Tranform result")
     print("Source matrix A:\n", A)
@@ -85,7 +102,7 @@ def solve(inputfile):
     print("U\n", U)
     print("L*U:\n", L.dot(U))
 
-    x = solve_LU(L, U, b)
+    x = solve_LU(L, U, b.dot(P))
     print("Solution x:\n", x)
 
     n = A.shape[0]
@@ -100,4 +117,4 @@ def solve(inputfile):
 
 
 
-solve("input2.json")
+solve("input.json")
