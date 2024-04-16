@@ -10,63 +10,64 @@ def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix]:
     n = dim[0]
 
     A_k = A.copy()
-    L = np.diag(np.full(n, 1))
+    L = np.diag(np.full(n, 1.0, dtype=np.float32))
     P = np.identity(n)
-    
 
     for k in range(n-1):
-        lead = A_k[k, k]
 
-        loginfo = f"k={k}, lead={lead}"
-        print(f"{loginfo:=^40}")
+        row = A_k[k, k]
+        max_l = k
+
+        for l in range(k+1, n):
+            if abs(row) < abs(A_k[l, k]):
+                row = abs(A_k[l, k])
+                max_l = l
+        
+        if max_l != k:
+            print("\nPERMUTATION: FROM A_k:\n", A_k)
+            A_k[[k, max_l]] = A_k[[max_l, k]]
+            print("TO A_k':\n", A_k)
+
+            print("\nPERMUTATION: FROM L:\n", L)
+            L[[k, max_l]] = L[[max_l, k]]
+            L[:, [k, max_l]] = L[:, [max_l, k]]
+            print("TO L':\n", L)
+
+            print("\nPERMUTATION: FROM P:\n", P)
+            P[[k, max_l]] = P[[max_l, k]]
+            print("TO P':\n", P)
+
+
+        loginfo = f"k={k}, lead={A_k[k, k]}"
+        print(f"\n{loginfo:=^40}")
 
         for i in range(k+1, n):
-            
-            row = A_k[k, k]
-            max_l = k
 
-            for l in range(k+1, n):
-                if abs(row) < abs(A_k[l, k]):
-                    row = abs(A_k[l, k])
-                    max_l = l
-            
-            if max_l != k:
-                A_k[[k, max_l]] = A_k[[max_l, k]]
-
-                L[[k, max_l]] = L[[max_l, k]]
-                L[:, [k, max_l]] = L[:, [max_l, k]]
-
-                P[[k, max_l]] = P[[max_l, k]]
-
-
-
-            mu = A_k[i, k] / lead
+            mu = A_k[i, k] / A_k[k, k]
             L[i, k] = mu
 
+            for j in range(k, n):
+                # print(f"\ni={i}, j={j}, k={k}")
+
+                # print(f"L[i][k] = {L[i, k]}, A[k][j] =  {A_k[k, j]}")
+                # m = L[i, k]*A_k[k, j]
+                # print(m, A_k[i, j])
+                A_k[i, j] = np.round(A_k[i, j] - L[i, k]*A_k[k, j], 4)
+                # print(A_k, '\n')
+            
             loginfo = f"i={i}"
-            print(f"{loginfo:-^40}")
+            print(f"\n{loginfo:-^40}")
             
             print(f"L = \n{L}")
+            print(f"A_k = \n{A_k}")
 
-            for j in range(k, n):
-                print(f"\ni={i}, j={j}, k={k}")
-
-                print(f"L[i][k] = {L[i, k]}, A[k][j] =  {A_k[k, j]}")
-                m = L[i, k]*A_k[k, j]
-                print(m, A_k[i, j])
-                A_k[i, j] = np.round(A_k[i, j] - L[i, k]*A_k[k, j], 4)
-                print(A_k, '\n')
-
-    for i in range(n):
-        L[i, i] = 1.0
     return (L, A_k, P)
 
 
 def solve_LU(L: np.matrix, U: np.matrix, b: np.array) -> np.array:
-    # Lz = b
-    # Ux = z
-
     n = L.shape[0]
+
+    # Lz = b
     z = np.zeros(n)
 
     for i in range(n):
@@ -76,6 +77,7 @@ def solve_LU(L: np.matrix, U: np.matrix, b: np.array) -> np.array:
             s += z[j]*L[i, j]
         z[i] = b[i] - s
     
+    # Ux = z
     x = np.zeros(n)
 
     for i in range(n-1, -1, -1):
@@ -96,13 +98,14 @@ def solve(inputfile):
     
     L, U, P = LUP_transfrom(A)
 
-    print("Tranform result")
+    print("\nTranform result")
     print("Source matrix A:\n", A)
-    print("L\n", L)
-    print("U\n", U)
+    print("L:\n", L)
+    print("U:\n", U)
+    print("P:\n", P)
     print("L*U:\n", L.dot(U))
 
-    x = solve_LU(L, U, b.dot(P))
+    x = solve_LU(L, U, P.dot(b))
     print("Solution x:\n", x)
 
     n = A.shape[0]
@@ -117,4 +120,4 @@ def solve(inputfile):
 
 
 
-solve("input.json")
+solve("./lab1/input3.json")
