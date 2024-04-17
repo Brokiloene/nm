@@ -3,15 +3,16 @@ from typing import Tuple
 
 import numpy as np
 
-np.set_printoptions(precision=4, floatmode="fixed")
+np.set_printoptions(precision=4, floatmode="fixed", suppress=True)
 
-def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix]:
+def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix, float]:
     dim = A.shape
     n = dim[0]
 
     A_k = A.copy()
     L = np.diag(np.full(n, 1.0, dtype=np.float32))
     P = np.identity(n)
+    permutations_cnt = 0
 
     for k in range(n-1):
 
@@ -37,6 +38,8 @@ def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix]:
             P[[k, max_l]] = P[[max_l, k]]
             print("TO P':\n", P)
 
+            permutations_cnt += 1
+
 
         loginfo = f"k={k}, lead={A_k[k, k]}"
         print(f"\n{loginfo:=^40}")
@@ -60,11 +63,21 @@ def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix]:
             
             print(f"L = \n{L}")
             print(f"A_k = \n{A_k}")
+        
 
-    return (L, A_k, P)
+        u_cumprod = 1
+
+        for i in range(n):
+            u_cumprod *= A_k[i, i]
+        
+        det = u_cumprod * pow(-1, permutations_cnt)
+    
+
+    return (L, A_k, P, det)
 
 
-def solve_LU(L: np.matrix, U: np.matrix, b: np.array) -> np.array:
+def solve_LU(L: np.matrix, U: np.matrix, P: np.matrix, b: np.array) -> np.array:
+    b = P.dot(b)
     n = L.shape[0]
 
     # Lz = b
@@ -89,6 +102,21 @@ def solve_LU(L: np.matrix, U: np.matrix, b: np.array) -> np.array:
     return x
 
 
+def calculate_inverted_matrix(L: np.matrix, U: np.matrix, P: np.matrix) -> np.matrix:
+    dim = L.shape
+    n = dim[0]
+    I = np.identity(n)
+    A_i = np.zeros(dim)
+
+    for i in range(n):
+        x_i = solve_LU(L, U, P, I[:, i])
+        A_i[:, i] = x_i
+
+    # A_i = A_i.round(1)
+    return A_i
+
+
+
 def solve(inputfile):
     with open(inputfile, "r") as f:
         data = json.load(f)
@@ -96,7 +124,7 @@ def solve(inputfile):
         A = np.matrix(data["A"], dtype=np.float32)
         b = np.array(data["b"], dtype=np.float32)
     
-    L, U, P = LUP_transfrom(A)
+    L, U, P, det = LUP_transfrom(A)
 
     print("\nTranform result")
     print("Source matrix A:\n", A)
@@ -105,7 +133,7 @@ def solve(inputfile):
     print("P:\n", P)
     print("L*U:\n", L.dot(U))
 
-    x = solve_LU(L, U, P.dot(b))
+    x = solve_LU(L, U, P, b)
     print("Solution x:\n", x)
 
     n = A.shape[0]
@@ -116,8 +144,13 @@ def solve(inputfile):
             check_x[i] += A[i, j]*x[j]
     
     print("Solution check: b\n", b, "\nwith x:\n", check_x)
+
+    print("\ndet(A) =", round(det))
     
+    A_i = calculate_inverted_matrix(L, U, P)
+    print("\nInverted A matrix:\n", A_i)
+    print("A * AI =\n", A.dot(A_i))
 
 
 
-solve("./lab1/input3.json")
+solve("./lab1/1_1/input3.json")
