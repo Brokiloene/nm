@@ -3,6 +3,8 @@ import json
 import numpy as np
 
 
+np.set_printoptions(precision=4, floatmode="fixed", suppress=True)
+
 def tdma(a: np.array, b: np.array, c: np.array, d: np.array) -> np.array:
     n = len(b)
 

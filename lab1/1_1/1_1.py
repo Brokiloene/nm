@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
+
 np.set_printoptions(precision=4, floatmode="fixed", suppress=True)
 
 def LUP_transfrom(A) -> Tuple[np.matrix, np.matrix, np.matrix, float]:
