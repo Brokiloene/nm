@@ -1,4 +1,5 @@
 import json
+from typing import Tuple
 from pathlib import Path
 
 import numpy as np
@@ -12,11 +13,12 @@ def matrix_norm(A: np.matrix) -> float:
     return res
 
 
-def rotation_method(A: np.matrix, EPS) -> np.array:
+def rotation_method(A: np.matrix, EPS) -> Tuple[np.array, np.matrix]:
     n = A.shape[0]
 
     converged = False
     num = 1
+    U = np.eye(n)
     while not converged:
         cur_max = 0
         l, k = 0, 0
@@ -30,16 +32,17 @@ def rotation_method(A: np.matrix, EPS) -> np.array:
                     k = j
 
         phi = 0.5 * np.arctan(2*A[l, k] / (A[l, l]-A[k, k]))
-        U = np.eye(n)
-        U[l, l] = np.cos(phi)
-        U[k, k] = np.cos(phi)
-        U[l, k] = -np.sin(phi)
-        U[k, l] = np.sin(phi)
+        U_k = np.eye(n)
+        U_k[l, l] = np.cos(phi)
+        U_k[k, k] = np.cos(phi)
+        U_k[l, k] = -np.sin(phi)
+        U_k[k, l] = np.sin(phi)
 
-        # print (U.T, A, U)
-        A = U.T @ A @ U
+        # print (U_k.T, A, U_k)
+        A = U_k.T @ A @ U_k
+        U @= U_k
 
-        print(f"Iteration №{num}\nU_{num}=\n", U, f"\nA_{num}=\n", A)
+        print(f"Iteration №{num}\nU_{num}=\n", U_k, f"\nA_{num}=\n", A)
         num += 1
 
         norm = matrix_norm(A)
@@ -47,7 +50,7 @@ def rotation_method(A: np.matrix, EPS) -> np.array:
         if norm < EPS:
             converged = True
     
-    return np.diag(A)
+    return np.diag(A).copy(), U
 
 
 def solve(inputfile):
@@ -57,12 +60,16 @@ def solve(inputfile):
         A = np.matrix(data["A"], dtype=np.float32)
         EPS = data["EPS"]
 
-    eigenvalues = np.sort(rotation_method(A, EPS))
+    eigenvalues, eigenvectors = rotation_method(A, EPS)
+    eigenvalues.sort()
 
     print("\nCalculated eignevalues using Rotation Method: ", eigenvalues)
+    print("Calculated eignevectors using Rotation Method:\n", eigenvectors)
 
-    numpy_eigenvalues = np.sort(np.linalg.eig(A)[0])
-    print("Calculated eignevalues using NumPy function:", numpy_eigenvalues)
+    numpy_eigenvalues, numpy_eigenvectors = np.linalg.eig(A)
+    numpy_eigenvalues.sort()
+    print("\nCalculated eignevalues using NumPy function:", numpy_eigenvalues)
+    print("Calculated eignevectors using NumPy function:\n", numpy_eigenvectors)
 
 
 cur_dir = Path(__file__).parent
