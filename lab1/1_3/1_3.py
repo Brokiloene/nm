@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import numpy as np
 
@@ -173,5 +174,6 @@ def solve(inputfile):
     print("\nSolution x:\n", x)
 
 
-    
-solve("./lab1/1_3/input3.json")
+
+cur_dir = Path(__file__).parent
+solve(cur_dir / "input.json" )

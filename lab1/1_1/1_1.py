@@ -1,5 +1,6 @@
 import json
 from typing import Tuple
+from pathlib import Path
 
 import numpy as np
 
@@ -147,6 +148,7 @@ def solve(inputfile):
     print("Solution check: b\n", b, "\nwith x:\n", check_x)
 
     print("\ndet(A) =", round(det))
+    print("NumPy det(A) =", np.linalg.det(A))
     
     A_i = calculate_inverted_matrix(L, U, P)
     print("\nInverted A matrix:\n", A_i)
@@ -154,4 +156,5 @@ def solve(inputfile):
 
 
 
-solve("./lab1/1_1/input3.json")
+cur_dir = Path(__file__).parent
+solve(cur_dir / "input.json" )
