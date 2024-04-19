@@ -8,7 +8,7 @@ np.set_printoptions(precision=4, floatmode="fixed", suppress=True)
 
 def matrix_norm(A: np.matrix):
     A = np.fabs(A)
-    max_col = np.max(np.sum(A, axis=0,))
+    max_col = np.max(np.sum(A, axis=0))
     max_row = np.max(np.sum(A, axis=1))
     return max(max_col, max_row)
 
@@ -121,7 +121,6 @@ def seidel_method(A: np.matrix, b: np.array, EPS) -> np.array:
     num = 1
     while True:
         x_i: np.array = Beta.copy()
-        # x_i = Beta + Alpha_1.dot(x_i) + Alpha_2.dot(x)
         for i in range(n):
             for j in range(0, i):
                 # print(f"Alpha_2[i, j]*x_i[j]: {Alpha_2[i, j]} * {x_i[j]}")
