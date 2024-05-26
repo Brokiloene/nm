@@ -100,4 +100,4 @@ def solve(inputfile):
 
 
 cur_dir = Path(__file__).parent
-solve(cur_dir / "input.json" )
+solve(cur_dir / "input3.json" )

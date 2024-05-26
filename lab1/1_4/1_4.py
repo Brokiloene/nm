@@ -43,10 +43,10 @@ def rotation_method(A: np.matrix, EPS) -> Tuple[np.array, np.matrix]:
         U @= U_k
 
         print(f"Iteration №{num}\nU_{num}=\n", U_k, f"\nA_{num}=\n", A)
-        num += 1
 
         norm = matrix_norm(A)
         print(f"║A_{num}║ = {norm}, EPS = {EPS}")
+        num += 1
         if norm < EPS:
             converged = True
     
